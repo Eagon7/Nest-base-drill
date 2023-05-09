@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement()) @db.UnsignedInt
+  mobile    String    @unique @db.Char(20)
+  name      String?
+  password  String
+  avatar    String?
+  github    String?
+  wakatime  String?
+  wechat    String?
+  gitee     String?
+  qq        String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Topic     Topic[]
+  comments  Comment[]
+  Reply     Reply[]
+}
+
+model System {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  title       String
+  description String
+  preview     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lessons     Lesson[]
+}
+
+model Tag {
+  id        Int         @id @default(autoincrement()) @db.UnsignedInt
+  title     String
+  LessonTag LessonTag[]
+  TopicTag  TopicTag[]
+}
+
+model Lesson {
+  id          Int         @id @default(autoincrement()) @db.UnsignedInt
+  title       String
+  price       Decimal     @db.Decimal(8, 2)
+  description String
+  preview     String
+  download    String?
+  click       Int?        @db.UnsignedMediumInt
+  status      Boolean
+  videoNum    Int?        @db.UnsignedMediumInt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  System      System?     @relation(fields: [systemId], references: [id])
+  systemId    Int?        @db.UnsignedInt
+  LessonTag   LessonTag[]
+  videos      Video[]
+}
+
+model LessonTag {
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     Int      @db.UnsignedInt
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId  Int      @db.UnsignedInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([tagId, lessonId])
+}
+
+model Topic {
+  id        Int        @id @default(autoincrement()) @db.UnsignedInt
+  title     String
+  content   String     @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  TopicTag  TopicTag[]
+  User      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int        @db.UnsignedInt
+  comments  Comment[]
+}
+
+model TopicTag {
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     Int      @db.UnsignedInt
+  topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topicId   Int      @db.UnsignedInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([tagId, topicId])
+}
+
+model Video {
+  id       Int       @id @default(autoincrement()) @db.UnsignedInt
+  title    String
+  path     String
+  Lesson   Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId Int       @db.UnsignedInt
+  comments Comment[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?     @db.UnsignedInt
+  Topic     Topic?   @relation(fields: [topicId], references: [id])
+  topicId   Int?     @db.UnsignedInt
+  Video     Video?   @relation(fields: [videoId], references: [id])
+  videoId   Int?     @db.UnsignedInt
+  Reply     Reply[]
+}
+
+model Reply {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @db.UnsignedInt
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  commentId Int      @db.UnsignedInt
+}
